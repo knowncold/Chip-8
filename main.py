@@ -1,7 +1,6 @@
 import cpu
 
-
 processor = cpu.CPU()
+processor.loadROM('roms/Pong.ch8')
 
-processor.loadROM('roms/PONG')
 
