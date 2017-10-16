@@ -1,8 +1,6 @@
 import random
 import struct
 import font
-import sys
-import pygame
 
 
 class CPU:
@@ -19,16 +17,7 @@ class CPU:
         self.lastKEY = -1
         self.keyboard = [0] * 16
         self.keyChanged = False
-
         self.loadFont()
-
-        pygame.init()
-        size = 64, 32
-        black = 0, 0, 0
-        self.surface = pygame.display.set_mode(size)
-        pygame.display.set_caption("Chip-8")
-        self.surface.fill(black)
-        self.pxArray = pygame.PixelArray(self.surface)
 
     def loadFont(self):
         for i in font.Font:
@@ -120,7 +109,7 @@ class CPU:
             print "INST_COND ERROR"
             exit(1)
 
-    def INST_DISP(self):
+    def INST_DISP(self):    # DXYN
         x, y = self.getXY(self.curr_inst)
         y = self.vRegister[y]
         n = self.curr_inst & 0x0F
@@ -131,6 +120,7 @@ class CPU:
             j = self.vRegister[x]
             while j < (self.vRegister[x] + 8) and j < 64:
                 des_address = 0xF00 + j / 8 + (y+i) * 8
+                print "%d %d %x" % (j, y, des_address)
                 bit_before = (self.memory[des_address] >> (7 - j % 8)) & 0x01
                 bit_after = (sprite >> sprite_bit) & 0x01
                 if bit_before == 1 and bit_after == 0:
@@ -219,8 +209,11 @@ class CPU:
             self.INST_COND()
         elif inst_type == 6:
             self.vRegister[(self.curr_inst & 0xF00) >> 8] = self.curr_inst & 0xFF
-        elif inst_type == 7:
-            self.vRegister[(self.curr_inst & 0xF00) >> 8] += self.curr_inst & 0xFF
+        elif inst_type == 7:    # TODO clean
+            tmp = self.vRegister[(self.curr_inst & 0xF00) >> 8] + self.curr_inst & 0xFF
+            if tmp > 255:
+                tmp -= 256
+            self.vRegister[(self.curr_inst & 0xF00) >> 8] = tmp
         elif inst_type == 8:
             self.INST_REG()
         elif inst_type == 0xA:
@@ -236,6 +229,9 @@ class CPU:
             self.INST_KEY()
         elif inst_type == 0xF:
             self.INST_F()
+        else:
+            print "INST ERROR", self.curr_inst
+            exit(1)
 
     def setCARRY(self, value):
         self.vRegister[0xF] = value
@@ -247,139 +243,3 @@ class CPU:
     @staticmethod
     def getX(value):
         return (value & 0x0F00) >> 8
-
-
-def videoRefresh(cpu):      # TODO reshape
-    array = cpu.pxArray
-    for i in range(32):
-        for j in range(0, 8):
-            v_ram = cpu.memory[0xF00 + i*8 + j]
-            for k in range(0, 8):
-                if (v_ram & 0x01) == 1:
-                    array[j*8 + 7 - k][i] = (255, 255, 255)
-                else:
-                    array[j*8 + 7 - k][i] = (0, 0, 0)
-                v_ram >>= 1
-
-
-def main():
-    processor = CPU()
-    processor.loadROM('roms/Fishie.ch8')
-    fps_clk = pygame.time.Clock()
-    fps = 60
-
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                processor.keyChanged = True
-
-                if event.key == pygame.K_0:
-                    processor.lastKEY = 0
-                    processor.keyboard[0] = 1
-                if event.key == pygame.K_1:
-                    processor.lastKEY = 1
-                    processor.keyboard[1] = 1
-                if event.key == pygame.K_2:
-                    processor.lastKEY = 2
-                    processor.keyboard[2] = 1
-                if event.key == pygame.K_3:
-                    processor.lastKEY = 3
-                    processor.keyboard[3] = 1
-                if event.key == pygame.K_4:
-                    processor.lastKEY = 4
-                    processor.keyboard[4] = 1
-                if event.key == pygame.K_5:
-                    processor.lastKEY = 5
-                    processor.keyboard[5] = 1
-                if event.key == pygame.K_6:
-                    processor.lastKEY = 6
-                    processor.keyboard[6] = 1
-                if event.key == pygame.K_7:
-                    processor.lastKEY = 7
-                    processor.keyboard[7] = 1
-                if event.key == pygame.K_8:
-                    processor.lastKEY = 8
-                    processor.keyboard[8] = 1
-                if event.key == pygame.K_9:
-                    processor.lastKEY = 9
-                    processor.keyboard[9] = 1
-                if event.key == pygame.K_a:
-                    processor.lastKEY = 0xA
-                    processor.keyboard[0xA] = 1
-                if event.key == pygame.K_b:
-                    processor.lastKEY = 0xB
-                    processor.keyboard[0xB] = 1
-                if event.key == pygame.K_c:
-                    processor.lastKEY = 0xC
-                    processor.keyboard[0xC] = 1
-                if event.key == pygame.K_d:
-                    processor.lastKEY = 0xD
-                    processor.keyboard[0xD] = 1
-                if event.key == pygame.K_e:
-                    processor.lastKEY = 0xE
-                    processor.keyboard[0xE] = 1
-                if event.key == pygame.K_f:
-                    processor.lastKEY = 0xF
-                    processor.keyboard[0xF] = 1
-
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_0:
-                    processor.lastKEY = 0
-                    processor.keyboard[0] = 0
-                if event.key == pygame.K_1:
-                    processor.lastKEY = 1
-                    processor.keyboard[1] = 0
-                if event.key == pygame.K_2:
-                    processor.lastKEY = 2
-                    processor.keyboard[2] = 0
-                if event.key == pygame.K_3:
-                    processor.lastKEY = 3
-                    processor.keyboard[3] = 0
-                if event.key == pygame.K_4:
-                    processor.lastKEY = 4
-                    processor.keyboard[4] = 0
-                if event.key == pygame.K_5:
-                    processor.lastKEY = 5
-                    processor.keyboard[5] = 0
-                if event.key == pygame.K_6:
-                    processor.lastKEY = 6
-                    processor.keyboard[6] = 0
-                if event.key == pygame.K_7:
-                    processor.lastKEY = 7
-                    processor.keyboard[7] = 0
-                if event.key == pygame.K_8:
-                    processor.lastKEY = 8
-                    processor.keyboard[8] = 0
-                if event.key == pygame.K_9:
-                    processor.lastKEY = 9
-                    processor.keyboard[9] = 0
-                if event.key == pygame.K_a:
-                    processor.lastKEY = 0xA
-                    processor.keyboard[0xA] = 0
-                if event.key == pygame.K_b:
-                    processor.lastKEY = 0xB
-                    processor.keyboard[0xB] = 0
-                if event.key == pygame.K_c:
-                    processor.lastKEY = 0xC
-                    processor.keyboard[0xC] = 0
-                if event.key == pygame.K_d:
-                    processor.lastKEY = 0xD
-                    processor.keyboard[0xD] = 0
-                if event.key == pygame.K_e:
-                    processor.lastKEY = 0xE
-                    processor.keyboard[0xE] = 0
-                if event.key == pygame.K_f:
-                    processor.lastKEY = 0xF
-                    processor.keyboard[0xF] = 0
-
-        videoRefresh(processor)
-        pygame.display.update()
-        processor.RUN()
-        fps_clk.tick(fps)
-        processor.tick()
-
-
-if __name__ == "__main__":
-    main()
