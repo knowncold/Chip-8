@@ -134,18 +134,19 @@ class CPU:
     def INST_DISP(self):  # DXYN
         x, y = self.getXY(self.curr_inst)
         y = self.vRegister[y]
-        n = self.curr_inst & 0x0F
+        height = self.curr_inst & 0x0F
         self.setCARRY(0)
-        for i in range(0, n):
+        for i in range(0, height):
             sprite_bit = 7
             sprite = self.memory[self.regI + i]
             j = self.vRegister[x]
             while j < (self.vRegister[x] + 8) and j < 64:
-                des_address = int(0xF00 + j // 8 + (y + i) * 8)
-                # print("%d %d %x" % (j, y, des_address))
+                des_address = int(0xF00 + j // 8 + (y + i) * 8)  # vram address
+                if des_address > 0xFFF:
+                    break
                 bit_before = (self.memory[des_address] >> (7 - j % 8)) & 0x01
                 bit_after = (sprite >> sprite_bit) & 0x01
-                if bit_before == 1 and bit_after == 0:
+                if (bit_before == 1 and bit_after == 1) or (bit_after == 0 and bit_before == 0):
                     self.setCARRY(1)
                     self.memory[des_address] &= (0xFF - (0x01 << (7 - j % 8)))
                 elif bit_before == 0 and bit_after == 1:
