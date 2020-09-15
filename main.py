@@ -1,15 +1,53 @@
 import cpu
 import pygame
 import sys
-import view
-
+import time
 
 processor = cpu.CPU()
-video = view.View()
-processor.loadROM('roms/MAZE')
-fps_clk = pygame.time.Clock()
-fps = 60
+processor.loadROM('roms/PONG2')
 
+scale = 10
+pygame.init()
+size = 64 * scale, 32 * scale
+black = 0, 0, 0
+surface = pygame.display.set_mode(size)
+pygame.display.set_caption("Chip-8")
+surface.fill(black)
+pxArray = pygame.PixelArray(surface)
+
+
+# class Aa(threading.Timer):
+#     def run(self):
+#         while not self.finished.is_set():
+#             self.finished.wait(self.interval)
+#             self.function(*self.args, **self.kwargs)
+#
+#         self.finished.set()
+
+def videoRefresh(pxArray, cpu, scale):
+    array = pxArray
+    for i in range(32):
+        for j in range(8):
+            v_ram = cpu.memory[0xF00 + i * 8 + j]
+            for k in range(0, 8):
+                x = j * 8 + 7 - k
+                y = i
+                if (v_ram & 0x01) == 1:
+                    array[(scale * x):(scale * (x + 1)), (scale * y):(scale * (y + 1))] = (255, 255, 255)
+                else:
+                    array[scale * x:scale * (x + 1), scale * y: scale * (y + 1)] = (0, 0, 0)
+                v_ram >>= 1
+
+
+tick = time.time()
+
+# test()
+#
+# processor.RUN(200)
+# print(processor.PC)
+# exit(0)
+# processor.RUN(186, False)
+count = 0
 
 while True:
     for event in pygame.event.get():
@@ -117,8 +155,14 @@ while True:
                 processor.lastKEY = 0xF
                 processor.keyboard[0xF] = 0
 
-    video.videoRefresh(processor)
-    pygame.display.update()
     processor.RUN()
-    fps_clk.tick(fps)
-    processor.tick()
+    videoRefresh(pxArray, processor, scale)
+    pygame.display.update()
+    # count += 1
+    # if count % 2 == 0:
+    # processor.addTimer(1)
+    past = time.time() - tick
+    add_timer = past // (1.0 / 60)
+    if add_timer > 0:
+        processor.addTimer(int(add_timer))
+        tick = time.time()
