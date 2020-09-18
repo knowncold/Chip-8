@@ -10,7 +10,7 @@ class CPU:
         self.memory = []
         self.vRegister = [0] * 16
         self.curr_inst = 0
-        self.SP = 0xFA0
+        self.SP = 0xEFF
         self.regI = 0
         self.DELAY = 60
         self.SOUND = 60
