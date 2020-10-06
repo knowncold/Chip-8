@@ -4,7 +4,7 @@ import sys
 import time
 
 processor = cpu.CPU()
-processor.loadROM('roms/PONG2')
+processor.loadROM('roms/INVADERS')
 
 scale = 10
 pygame.init()
@@ -15,14 +15,6 @@ pygame.display.set_caption("Chip-8")
 surface.fill(black)
 pxArray = pygame.PixelArray(surface)
 
-
-# class Aa(threading.Timer):
-#     def run(self):
-#         while not self.finished.is_set():
-#             self.finished.wait(self.interval)
-#             self.function(*self.args, **self.kwargs)
-#
-#         self.finished.set()
 
 def videoRefresh(pxArray, cpu, scale):
     array = pxArray
@@ -40,6 +32,7 @@ def videoRefresh(pxArray, cpu, scale):
 
 
 tick = time.time()
+run_tick = time.time()
 
 # test()
 #
@@ -155,14 +148,14 @@ while True:
                 processor.lastKEY = 0xF
                 processor.keyboard[0xF] = 0
 
-    processor.RUN()
-    videoRefresh(pxArray, processor, scale)
-    pygame.display.update()
-    # count += 1
-    # if count % 2 == 0:
-    # processor.addTimer(1)
+    run_time = time.time() - run_tick
+    if run_time // (1.0 / 800) > 0:
+        processor.RUN()
+        run_tick = time.time()
     past = time.time() - tick
     add_timer = past // (1.0 / 60)
     if add_timer > 0:
+        videoRefresh(pxArray, processor, scale)
         processor.addTimer(int(add_timer))
+        pygame.display.update()
         tick = time.time()

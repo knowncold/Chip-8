@@ -64,7 +64,7 @@ class CPU:
             print("Wrong SP address")
             exit(1)
         self.PC = (self.memory[self.SP - 1] << 8) + self.memory[self.SP]
-        print("Return to: ", self.PC)
+        # print("Return to: ", self.PC)
 
     def INST_GOTO(self):  # 1NNN
         if self.PC == self.curr_inst - 0x1000:
@@ -73,7 +73,7 @@ class CPU:
         self.PC = self.curr_inst - 0x1000
 
     def INST_CALL(self):  # 2NNN
-        print("Call from: ", self.PC)
+        # print("Call from: ", self.PC)
         self.PC += 2
         self.memory[self.SP - 1] = (self.PC & 0xFF00) >> 8
         self.memory[self.SP] = self.PC & 0xFF
@@ -194,11 +194,11 @@ class CPU:
             self.memory[self.regI + 1] = self.vRegister[x] % 100 // 10
             self.memory[self.regI + 2] = self.vRegister[x] % 10
         elif right == 0x55:
-            for i in range(0, x):
+            for i in range(0, x + 1):
                 self.memory[self.regI + i] = self.vRegister[i]
             self.regI += (x + 1)
         elif right == 0x65:
-            for i in range(0, x):
+            for i in range(0, x + 1):
                 self.vRegister[i] = self.memory[self.regI + i]
             self.regI += (x + 1)
         else:
@@ -210,9 +210,9 @@ class CPU:
     def RUN(self, cycles=1, flag=True):
         for i in range(0, cycles):
             self.curr_inst = (self.memory[self.PC] << 8) + self.memory[self.PC + 1]
-            if flag:
-                print("PC %x %x" % (self.PC, self.curr_inst))
-                # print("%x" % self.curr_inst)
+            # if flag:
+            # print("PC %x %x %x" % (self.PC, self.curr_inst, self.vRegister[0]))
+            # print("%x" % self.curr_inst)
             self.execINST()
             if self.PC < 0x200:
                 print("wrong pc address")
